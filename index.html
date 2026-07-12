@@ -50,6 +50,10 @@ body{background:var(--bg);color:var(--text);font-family:'Nunito Sans',sans-serif
 .hname-last{background:linear-gradient(135deg,var(--accent),var(--teal));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
 .hsub{font-size:10.5px;color:var(--text3);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .header-right{display:flex;align-items:center;gap:7px;flex-shrink:0;}
+.hamburger-btn{display:none;flex-direction:column;justify-content:center;align-items:center;gap:4px;width:32px;height:32px;background:rgba(79,158,255,0.12);border:1px solid rgba(79,158,255,0.28);border-radius:8px;cursor:pointer;flex-shrink:0;}
+.hamburger-btn span{display:block;width:16px;height:2px;background:var(--accent);border-radius:2px;transition:var(--tr);}
+.drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:1000;opacity:0;transition:opacity 0.25s ease;}
+.drawer-overlay.open{display:block;opacity:1;}
 .status-pill{display:flex;align-items:center;gap:5px;background:rgba(56,217,169,0.1);border:1px solid rgba(56,217,169,0.25);border-radius:999px;padding:4px 10px;font-size:10.5px;font-weight:700;color:#38d9a9;white-space:nowrap;}
 .status-dot{width:6px;height:6px;border-radius:50%;background:#38d9a9;animation:pulse 2s infinite;}
 .hdr-dl-btn{display:flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:5px 10px;border-radius:7px;text-decoration:none;cursor:pointer;border:none;transition:var(--tr);background:rgba(79,158,255,0.15);border:1px solid rgba(79,158,255,0.3);color:var(--accent);}
@@ -59,6 +63,11 @@ body{background:var(--bg);color:var(--text);font-family:'Nunito Sans',sans-serif
 .header-tabs{display:flex;align-items:center;padding:5px 10px;gap:3px;overflow-x:auto;scrollbar-width:none;height:52px;-ms-overflow-style:none;}
 .header-tabs::-webkit-scrollbar{display:none;}
 .nav-tab{position:relative;flex-shrink:0;display:flex;align-items:center;gap:4px;padding:0 11px;height:36px;border-radius:9px;font-size:12px;font-weight:500;color:var(--text2);cursor:pointer;white-space:nowrap;font-family:'Nunito Sans',sans-serif;background:transparent;border:1.5px solid transparent;overflow:hidden;transition:all 0.22s ease;outline:none;}
+/* On tablet/desktop, fill the full header width instead of horizontal scrolling */
+@media(min-width:641px){
+  .header-tabs{overflow-x:visible;justify-content:stretch;}
+  .nav-tab{flex:1 1 0;min-width:0;justify-content:center;}
+}
 .ti{font-size:14px;line-height:1;transition:transform 0.22s ease;}
 .tl{font-size:11.5px;font-weight:600;transition:color 0.22s ease;}
 .tb{font-size:9px;font-weight:800;padding:1px 5px;border-radius:4px;line-height:1.5;display:inline-block;transition:all 0.22s ease;}
@@ -350,6 +359,19 @@ body{background:var(--bg);color:var(--text);font-family:'Nunito Sans',sans-serif
   .btn-primary,.btn-outline,.btn-dl,.btn-linkedin{font-size:12.5px;padding:10px 16px;}
   .status-pill{display:none;}
   .hdr-dl-btn{font-size:9.5px;padding:4px 8px;}
+  .hamburger-btn{display:flex;}
+  .header-tabs{
+    position:fixed;top:0;right:0;height:100dvh;width:78vw;max-width:300px;
+    background:rgba(7,16,30,0.99);backdrop-filter:blur(24px);
+    flex-direction:column;align-items:stretch;justify-content:flex-start;
+    padding:70px 14px 24px;gap:6px;overflow-y:auto;overflow-x:hidden;
+    transform:translateX(100%);transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);
+    z-index:1001;border-left:1px solid rgba(79,158,255,0.16);
+    box-shadow:-10px 0 40px rgba(0,0,0,0.55);
+  }
+  .header-tabs.open{transform:translateX(0);}
+  .header-tabs .nav-tab{width:100%;justify-content:flex-start;height:44px;padding:0 14px;flex:none;}
+  .header-tabs .tl{display:inline-block!important;}
 }
 @media(max-width:380px){
   .tl{display:none;}
@@ -377,9 +399,10 @@ body{background:var(--bg);color:var(--text);font-family:'Nunito Sans',sans-serif
     </div>
     <div class="header-right">
       <a class="hdr-dl-btn" href="#" onclick="downloadResume();return false;">📄 Resume</a>
-      <div class="status-pill"><span class="status-dot"></span>Open to Remote</div>
+      <button class="hamburger-btn" onclick="toggleDrawer()" aria-label="Menu"><span></span><span></span><span></span></button>
     </div>
   </div>
+  <div class="drawer-overlay" onclick="closeDrawer()"></div>
   <div class="header-tabs">
     <button class="nav-tab active" onclick="showTab('about',this)" data-tooltip="Who I Am">
       <span class="ti">👤</span><span class="tl">About</span><span class="tb orange">ME</span>
@@ -399,10 +422,6 @@ body{background:var(--bg);color:var(--text);font-family:'Nunito Sans',sans-serif
     </button>
     <button class="nav-tab" onclick="showTab('enterprise',this)">
       <span class="ti">🏢</span><span class="tl">Enterprise</span><span class="tb purple">9+</span>
-      <span class="ripple-container"></span>
-    </button>
-    <button class="nav-tab" onclick="showTab('videos',this)">
-      <span class="ti">🎥</span><span class="tl">Demos</span><span class="tb red">22</span>
       <span class="ripple-container"></span>
     </button>
     <button class="nav-tab" onclick="showTab('contact',this)">
@@ -457,7 +476,7 @@ body{background:var(--bg);color:var(--text);font-family:'Nunito Sans',sans-serif
       </div>
     </div>
     <div class="hero-cta">
-      <button onclick="showTab('contact',document.querySelectorAll('.nav-tab')[6])" class="btn-primary">✉️ Hire Me</button>
+      <button onclick="showTab('contact',document.querySelectorAll('.nav-tab')[5])" class="btn-primary">✉️ Hire Me</button>
       <a href="#" onclick="downloadResume();return false;" class="btn-dl">📄 Resume</a>
       <a href="#" onclick="downloadCover();return false;" class="btn-dl" style="background:rgba(56,217,169,0.1);color:#38d9a9;border-color:rgba(56,217,169,0.28);">📋 Cover Letter</a>
       <a href="https://www.linkedin.com/in/akash-gupta-91069b7b" target="_blank" class="btn-linkedin">🔗 LinkedIn</a>
@@ -496,7 +515,7 @@ body{background:var(--bg);color:var(--text);font-family:'Nunito Sans',sans-serif
       <h3>📋 Personal Info</h3>
       <div class="info-row"><span>👤</span><div><strong>Name</strong>Akash Gupta</div></div>
       <div class="info-row"><span>💼</span><div><strong>Role</strong>Senior Flutter Developer</div></div>
-      <div class="info-row"><span>📍</span><div><strong>Location</strong>India (Open to Remote)</div></div>
+      <div class="info-row"><span>📍</span><div><strong>Location</strong>India</div></div>
       <div class="info-row"><span>📧</span><div><strong>Email</strong>gupta.akash555@gmail.com</div></div>
       <div class="info-row"><span>📱</span><div><strong>Phone</strong>+91-7987574875</div></div>
       <div class="info-row"><span>🎓</span><div><strong>Degree</strong>B.Tech — IT, 2011</div></div>
@@ -700,38 +719,16 @@ body{background:var(--bg);color:var(--text);font-family:'Nunito Sans',sans-serif
   </div>
 </section>
 
-<!-- ═══ DEMOS ═══ -->
-<section class="tab-section" id="tab-videos">
-  <div class="section-header">
-    <div class="section-eyebrow">App Demo Videos</div>
-    <h2 class="section-title">Watch My <span>Apps in Action</span></h2>
-    <p class="section-sub">22 real demo videos. Tap any thumbnail below to play the video.</p>
-  </div>
-  <div class="video-note">💡 Koi bhi thumbnail ya featured video click karo — YouTube pe seedha open hoga. ✅ No embed errors!</div>
-  <a class="video-featured" id="featuredVideoLink" href="https://www.youtube.com/watch?v=wcIJptn9s9g" target="_blank" rel="noopener">
-    <img id="featuredThumb" src="https://img.youtube.com/vi/wcIJptn9s9g/hqdefault.jpg" alt="Demo Video">
-    <div class="video-featured-overlay">
-      <div class="video-featured-play"><svg width="26" height="26" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
-      <div class="video-featured-title" id="featuredLabel">🎬 Demo 01 — Click to Watch on YouTube</div>
-    </div>
-    <div class="video-yt-badge">▶ YouTube</div>
-  </a>
-  <div class="video-grid" id="videoGrid"></div>
-  <div style="margin-top:22px;text-align:center;">
-    <a href="https://www.youtube.com/@akashgupta687" target="_blank" class="btn-outline">🎥 Full YouTube Channel →</a>
-  </div>
-</section>
-
 <!-- ═══ CONTACT ═══ -->
 <section class="tab-section" id="tab-contact">
   <div class="section-header">
     <div class="section-eyebrow">Get In Touch</div>
     <h2 class="section-title">Let's Work <span>Together</span></h2>
-    <p class="section-sub">Open to remote opportunities worldwide — full-time, contract, or freelance. I respond within 24 hours.</p>
+    <p class="section-sub">Let's discuss your project or role — full-time, contract, or freelance. I respond within 24 hours.</p>
   </div>
   <div class="contact-grid">
-    <a href="mailto:gupta.akash555@gmail.com" class="contact-item"><div class="contact-icon-wrap">✉️</div><div><div class="contact-label">Email</div><div class="contact-value">gupta.akash555@gmail.com</div></div></a>
-    <a href="tel:+917987574875" class="contact-item"><div class="contact-icon-wrap">📱</div><div><div class="contact-label">Phone / WhatsApp</div><div class="contact-value">+91-7987574875</div></div></a>
+    <a href="mailto:gupta.akash555@gmail.com" class="contact-item" onclick="if(typeof gtag==='function')gtag('event','email_click',{'event_category':'engagement','event_label':'Contact Grid Email'});"><div class="contact-icon-wrap">✉️</div><div><div class="contact-label">Email</div><div class="contact-value">gupta.akash555@gmail.com</div></div></a>
+    <a href="tel:+917987574875" class="contact-item" onclick="if(typeof gtag==='function')gtag('event','whatsapp_click',{'event_category':'engagement','event_label':'Contact Grid Phone/WhatsApp'});"><div class="contact-icon-wrap">📱</div><div><div class="contact-label">Phone / WhatsApp</div><div class="contact-value">+91-7987574875</div></div></a>
     <a href="https://github.com/AkashGuptaDeveloper" target="_blank" class="contact-item"><div class="contact-icon-wrap">🐙</div><div><div class="contact-label">GitHub</div><div class="contact-value">AkashGuptaDeveloper</div></div></a>
     <a href="https://www.youtube.com/@akashgupta687" target="_blank" class="contact-item"><div class="contact-icon-wrap">🎥</div><div><div class="contact-label">YouTube</div><div class="contact-value">@akashgupta687</div></div></a>
     <a href="https://www.linkedin.com/in/akash-gupta-91069b7b" target="_blank" class="contact-linkedin" style="grid-column:span 2;">
@@ -752,7 +749,7 @@ body{background:var(--bg);color:var(--text);font-family:'Nunito Sans',sans-serif
   <!-- SEND MESSAGE -->
   <div class="contact-form-card">
     <h3>📨 Send Me a Message</h3>
-    <p>Hiring team? Fill this form — it will open your email client ready to send directly to gupta.akash555@gmail.com. I read every message personally.</p>
+    <p>Hiring team? Fill this form — your enquiry is sent instantly to <strong>gupta.akash555@gmail.com</strong> (reaches Akash's mobile too). No email client needed. I read every message personally.</p>
     <div class="form-row">
       <div class="form-group"><label class="form-label">Your Name *</label><input type="text" class="form-input" id="contactName" placeholder="John Smith"></div>
       <div class="form-group"><label class="form-label">Your Email</label><input type="email" class="form-input" id="contactEmail" placeholder="john@company.com"></div>
@@ -760,19 +757,20 @@ body{background:var(--bg);color:var(--text);font-family:'Nunito Sans',sans-serif
     <div class="form-group"><label class="form-label">Company / Organization</label><input type="text" class="form-input" id="contactCompany" placeholder="Your Company Name"></div>
     <div class="form-group"><label class="form-label">Subject</label><input type="text" class="form-input" id="contactSubject" placeholder="Flutter Developer Opportunity"></div>
     <div class="form-group"><label class="form-label">Message *</label><textarea class="form-textarea" id="contactMessage" placeholder="Hi Akash, I'd love to discuss a Flutter project...&#10;&#10;Tell me about:&#10;• Role / Project type&#10;• Duration &amp; budget&#10;• Tech stack required"></textarea></div>
-    <button class="btn-primary" onclick="sendEmail()" style="width:100%;justify-content:center;font-size:14.5px;padding:13px;border-radius:12px;">📧 Send Message to Akash</button>
-    <div class="form-success" id="formSuccess">✅ Email client opening — your message is ready to send to gupta.akash555@gmail.com</div>
+    <button class="btn-primary" id="sendMsgBtn" onclick="sendEmail()" style="width:100%;justify-content:center;font-size:14.5px;padding:13px;border-radius:12px;">📧 Send Message to Akash</button>
+    <button class="btn-outline" onclick="sendWhatsApp()" style="width:100%;justify-content:center;font-size:13.5px;padding:11px;border-radius:12px;margin-top:8px;">📱 Or Send via WhatsApp</button>
+    <div class="form-success" id="formSuccess">✅ Message sent — it's landed directly in Akash's email/mobile. He'll reply within 24 hours.</div>
     <div class="form-error" id="formError">⚠️ Please fill in your name and message before sending.</div>
-    <div style="text-align:center;margin-top:14px;font-size:11.5px;color:var(--text3);">Or reach directly: <a href="tel:+917987574875" style="color:var(--teal);text-decoration:none;font-weight:700;">📱 +91-7987574875</a> · <a href="https://www.linkedin.com/in/akash-gupta-91069b7b" target="_blank" style="color:#60a5fa;text-decoration:none;font-weight:700;">🔗 LinkedIn</a></div>
+    <div style="text-align:center;margin-top:14px;font-size:11.5px;color:var(--text3);">Or reach directly: <a href="tel:+917987574875" onclick="if(typeof gtag==='function')gtag('event','whatsapp_click',{'event_category':'engagement','event_label':'Reach Directly Phone'});" style="color:var(--teal);text-decoration:none;font-weight:700;">📱 +91-7987574875</a> · <a href="https://www.linkedin.com/in/akash-gupta-91069b7b" target="_blank" style="color:#60a5fa;text-decoration:none;font-weight:700;">🔗 LinkedIn</a></div>
   </div>
 </section>
 
 </main>
 
 <footer class="footer">
-  Built with ❤️ by <span>Akash Gupta</span> · Senior Flutter Developer · <span>8+ Years</span> · <span>50+ Apps</span> · <span class="orange">Open to Remote Worldwide</span><br>
+  Built with ❤️ by <span>Akash Gupta</span> · Senior Flutter Developer · <span>8+ Years</span> · <span>50+ Apps</span><br>
   <div style="margin-top:8px;display:flex;justify-content:center;align-items:center;gap:14px;flex-wrap:wrap;">
-    <a href="mailto:gupta.akash555@gmail.com" style="color:var(--text3);text-decoration:none;font-size:11.5px;">✉️ gupta.akash555@gmail.com</a>
+    <a href="mailto:gupta.akash555@gmail.com" onclick="if(typeof gtag==='function')gtag('event','email_click',{'event_category':'engagement','event_label':'Footer Email'});" style="color:var(--text3);text-decoration:none;font-size:11.5px;">✉️ gupta.akash555@gmail.com</a>
     <a href="https://www.linkedin.com/in/akash-gupta-91069b7b" target="_blank" style="color:#60a5fa;text-decoration:none;font-size:11.5px;">🔗 LinkedIn</a>
     <a href="https://github.com/AkashGuptaDeveloper" target="_blank" style="color:var(--text3);text-decoration:none;font-size:11.5px;">🐙 GitHub</a>
   </div>
@@ -857,9 +855,22 @@ function showTab(id,btn){
     const top=main.getBoundingClientRect().top+window.scrollY-hdr.offsetHeight-10;
     window.scrollTo({top,behavior:'smooth'});
   }
+  closeDrawer();
 }
 function scrollToTop(){window.scrollTo({top:0,behavior:'smooth'});}
-function openLinkedIn(){window.open('https://www.linkedin.com/in/akash-gupta-91069b7b','_blank');}
+function openLinkedIn(){window.open('https://www.linkedin.com/in/akash-gupta-91069b7b','_blank');closeDrawer();}
+function toggleDrawer(){
+  document.querySelector('.header-tabs').classList.toggle('open');
+  document.querySelector('.drawer-overlay').classList.toggle('open');
+  document.body.style.overflow=document.querySelector('.header-tabs').classList.contains('open')?'hidden':'';
+}
+function closeDrawer(){
+  const tabs=document.querySelector('.header-tabs');
+  const ov=document.querySelector('.drawer-overlay');
+  if(tabs)tabs.classList.remove('open');
+  if(ov)ov.classList.remove('open');
+  document.body.style.overflow='';
+}
 
 /* COUNTERS */
 function animateCounters(){
@@ -870,58 +881,64 @@ function animateCounters(){
   });
 }
 
-/* VIDEOS */
-const videos=[
-  {id:'wcIJptn9s9g',title:'Demo 01'},{id:'PRhD3UXUtmQ',title:'Demo 02'},
-  {id:'U8FgZhhyOcQ',title:'Demo 03'},{id:'TAtjKE3zzm8',title:'Demo 04'},
-  {id:'9z2DN1sKzjs',title:'Demo 05'},{id:'PqAdcblUkSo',title:'Demo 06'},
-  {id:'JbylsLg-XqQ',title:'Demo 07'},{id:'qdCmWnt6lLw',title:'Demo 08'},
-  {id:'xtmhFdSz0wE',title:'Demo 09'},{id:'J9MqskdbK9U',title:'Demo 10'},
-  {id:'Vd2Xulhbfg0',title:'Demo 11'},{id:'uQPUCzr2bbs',title:'Demo 12'},
-  {id:'zd_0d6TC050',title:'Demo 13'},{id:'sPVjqer3DNc',title:'Demo 14'},
-  {id:'lZuaAJHRfXM',title:'Demo 15'},{id:'HXVWD5D0GWk',title:'Demo 16'},
-  {id:'ExWUUS6ZXsQ',title:'Demo 17'},{id:'P_D8v0JXtLc',title:'Demo 18'},
-  {id:'xlkILjNVfhY',title:'Demo 19'},{id:'6LdIBcAMEwg',title:'Demo 20'},
-  {id:'mN61LlbouDo',title:'Demo 21'},{id:'_gOJRJ-UJto',title:'Demo 22'}
-];
-function loadVideo(idx){
-  const v=videos[idx];
-  const link=document.getElementById('featuredVideoLink');
-  const thumb=document.getElementById('featuredThumb');
-  const label=document.getElementById('featuredLabel');
-  link.href='https://www.youtube.com/watch?v='+v.id;
-  thumb.src='https://img.youtube.com/vi/'+v.id+'/hqdefault.jpg';
-  thumb.onerror=function(){this.src='https://img.youtube.com/vi/'+v.id+'/mqdefault.jpg';};
-  label.textContent='🎬 '+v.title+' — Click to Watch on YouTube';
-  document.querySelectorAll('.video-thumb').forEach((el,i)=>el.classList.toggle('selected',i===idx));
-  link.scrollIntoView({behavior:'smooth',block:'nearest'});
-}
-function buildVideoGrid(){
-  document.getElementById('videoGrid').innerHTML=videos.map((v,i)=>`
-    <div class="video-thumb ${i===0?'selected':''}" onclick="loadVideo(${i})">
-      <div class="video-thumb-img">
-        <img src="https://img.youtube.com/vi/${v.id}/mqdefault.jpg" alt="${v.title}" loading="lazy" onerror="this.parentElement.style.background='#1a2540'">
-        <div class="play-overlay"><div class="play-btn-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div>
-      </div>
-      <div class="video-thumb-label">${v.title}</div>
-    </div>`).join('');
-}
 
-/* EMAIL */
-function sendEmail(){
+/* CONTACT — dynamic, free, no backend */
+async function sendEmail(){
   const name=document.getElementById('contactName').value.trim();
   const email=document.getElementById('contactEmail').value.trim();
   const company=document.getElementById('contactCompany').value.trim();
   const subject=document.getElementById('contactSubject').value.trim()||'Flutter Developer Opportunity';
   const message=document.getElementById('contactMessage').value.trim();
-  document.getElementById('formError').style.display='none';
-  document.getElementById('formSuccess').style.display='none';
-  if(!name||!message){document.getElementById('formError').style.display='block';return;}
-  let body='Hi Akash,\n\n'+message+'\n\n---\nFrom: '+name;
-  if(company)body+='\nCompany: '+company;
-  if(email)body+='\nEmail: '+email;
-  window.location.href='mailto:gupta.akash555@gmail.com?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
-  document.getElementById('formSuccess').style.display='block';
+  const errBox=document.getElementById('formError');
+  const okBox=document.getElementById('formSuccess');
+  const btn=document.getElementById('sendMsgBtn');
+  errBox.style.display='none';
+  okBox.style.display='none';
+  if(!name||!message){errBox.style.display='block';return;}
+  if(btn){btn.disabled=true;btn.textContent='Sending…';}
+  try{
+    const res=await fetch('https://formsubmit.co/ajax/gupta.akash555@gmail.com',{
+      method:'POST',
+      headers:{'Content-Type':'application/json',Accept:'application/json'},
+      body:JSON.stringify({
+        Name:name,
+        Email:email||'Not provided',
+        Company:company||'Not provided',
+        Message:message,
+        _subject:'📩 Portfolio Enquiry: '+subject,
+        _template:'table',
+        _captcha:'false'
+      })
+    });
+    if(!res.ok)throw new Error('send-failed');
+    const data=await res.json().catch(()=>({}));
+    if(data && data.success===false)throw new Error('send-failed');
+    okBox.textContent='✅ Message sent — it\'s landed directly in Akash\'s email/mobile. He\'ll reply within 24 hours.';
+    okBox.style.display='block';
+    if(typeof gtag==='function')gtag('event','contact_form_submit',{'event_category':'engagement','event_label':'Contact Form'});
+    ['contactName','contactEmail','contactCompany','contactSubject','contactMessage'].forEach(id=>document.getElementById(id).value='');
+  }catch(e){
+    let body='Hi Akash,\n\n'+message+'\n\n---\nFrom: '+name;
+    if(company)body+='\nCompany: '+company;
+    if(email)body+='\nEmail: '+email;
+    window.location.href='mailto:gupta.akash555@gmail.com?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
+    okBox.textContent='✅ Opening your email app to send directly to gupta.akash555@gmail.com';
+    okBox.style.display='block';
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='📧 Send Message to Akash';}
+  }
+}
+function sendWhatsApp(){
+  const name=document.getElementById('contactName').value.trim();
+  const company=document.getElementById('contactCompany').value.trim();
+  const subject=document.getElementById('contactSubject').value.trim()||'Flutter Developer Opportunity';
+  const message=document.getElementById('contactMessage').value.trim();
+  const errBox=document.getElementById('formError');
+  errBox.style.display='none';
+  if(!name||!message){errBox.style.display='block';return;}
+  let text='Hi Akash, I\'m '+name+(company?' from '+company:'')+'.\nSubject: '+subject+'\n\n'+message;
+  window.open('https://wa.me/917987574875?text='+encodeURIComponent(text),'_blank');
+  if(typeof gtag==='function')gtag('event','contact_whatsapp_click',{'event_category':'engagement','event_label':'WhatsApp Enquiry'});
 }
 
 /* DOWNLOADS */
@@ -947,6 +964,7 @@ function toggleWaPopup(){
   else{popup.classList.remove('show');}
 }
 function sendWaMessage(){
+  if(typeof gtag==='function')gtag('event','whatsapp_click',{'event_category':'engagement','event_label':'Floating WhatsApp Widget'});
   const msg=document.getElementById('waMsg').value.trim()||'Hi Akash, I saw your portfolio and want to discuss a Flutter project!';
   const phone='917987574875';
   const encodedMsg=encodeURIComponent(msg);
@@ -980,7 +998,6 @@ document.querySelectorAll('.nav-tab').forEach(btn=>{
 });
 
 /* INIT */
-buildVideoGrid();
 setTimeout(animateCounters,500);
 </script>
 </body>
